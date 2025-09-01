@@ -1,11 +1,7 @@
 import { emit } from '@riddance/service/test/event'
-import { getRocketState } from '../lib/schema.js'
-import {
-    createRocketId,
-    createLaunchedEvent,
-    createSpeedIncreasedEvent,
-} from './lib/test-helpers.js'
 import assert from 'node:assert/strict'
+import { getRocketState } from '../lib/schema.js'
+import { createLaunchedEvent, createRocketId, createSpeedIncreasedEvent } from './lib/events.js'
 
 describe('speed-increased', () => {
     it('should increase rocket speed', async () => {

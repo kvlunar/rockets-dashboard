@@ -1,7 +1,7 @@
 import { emit } from '@riddance/service/test/event'
-import { getRocketState } from '../lib/schema.js'
-import { createRocketId, createLaunchedEvent } from './lib/test-helpers.js'
 import assert from 'node:assert/strict'
+import { getRocketState } from '../lib/schema.js'
+import { createLaunchedEvent, createRocketId } from './lib/events.js'
 
 describe('launched', () => {
     it('should create new rocket state', async () => {

@@ -1,7 +1,7 @@
-import { request } from '@riddance/service/test/http'
 import { emit } from '@riddance/service/test/event'
-import { createRocketId, createLaunchedEvent } from './lib/test-helpers.js'
+import { request } from '@riddance/service/test/http'
 import assert from 'node:assert/strict'
+import { createLaunchedEvent, createRocketId } from './lib/events.js'
 
 describe('dashboard', () => {
     it('should return empty array when no rockets', async () => {
