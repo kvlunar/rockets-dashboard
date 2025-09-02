@@ -45,6 +45,13 @@ export async function getAllRockets(context: object): Promise<RocketState[]> {
     return allRockets
 }
 
+export async function deleteAllRockets(context: object) {
+    const rs = rockets(context)
+    for await (const { key, revision } of rs.getAll()) {
+        await rs.delete(key, revision)
+    }
+}
+
 export async function updateRocketState(
     context: object,
     rocketId: string,
