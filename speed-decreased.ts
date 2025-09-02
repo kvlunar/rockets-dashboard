@@ -20,6 +20,9 @@ on('rocket', 'speed-decreased', async (context, subject, event) => {
     }
 
     rocket.processedMessageIds.push(meta.sequence)
+    if (rocket.processedMessageIds.length === 33) {
+        rocket.processedMessageIds.splice(0, 1)
+    }
     rocket.currentSpeed = Math.max(0, rocket.currentSpeed - by)
 
     await updateRocketState(context, subject, rocket)
