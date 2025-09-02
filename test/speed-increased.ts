@@ -1,14 +1,19 @@
 import { emit } from '@riddance/service/test/event'
 import assert from 'node:assert/strict'
 import { getRocketState } from '../lib/schema.js'
-import { createLaunchedEvent, createRocketId, createSpeedIncreasedEvent } from './lib/events.js'
+import {
+    createExplodedEvent,
+    createLaunchedEvent,
+    createRocketId,
+    createSpeedIncreasedEvent,
+} from './lib/events.js'
 
 describe('speed-increased', () => {
     it('should increase rocket speed', async () => {
         const rocketId = createRocketId()
 
-        await emit('rocket', 'launched', rocketId, createLaunchedEvent('Falcon-9', 1000), 'msg-1')
-        await emit('rocket', 'speed-increased', rocketId, createSpeedIncreasedEvent(200), 'msg-2')
+        await emit('rocket', 'launched', rocketId, createLaunchedEvent('Falcon-9', 1000))
+        await emit('rocket', 'speed-increased', rocketId, createSpeedIncreasedEvent(200, 1))
 
         const rocket = await getRocketState({}, rocketId)
         assert.ok(rocket)
@@ -18,9 +23,9 @@ describe('speed-increased', () => {
     it('should be idempotent', async () => {
         const rocketId = createRocketId()
 
-        await emit('rocket', 'launched', rocketId, createLaunchedEvent('Falcon-9', 1000), 'msg-1')
-        await emit('rocket', 'speed-increased', rocketId, createSpeedIncreasedEvent(200), 'msg-2')
-        await emit('rocket', 'speed-increased', rocketId, createSpeedIncreasedEvent(200), 'msg-2')
+        await emit('rocket', 'launched', rocketId, createLaunchedEvent('Falcon-9', 1000))
+        await emit('rocket', 'speed-increased', rocketId, createSpeedIncreasedEvent(200, 1))
+        await emit('rocket', 'speed-increased', rocketId, createSpeedIncreasedEvent(200, 1))
 
         const rocket = await getRocketState({}, rocketId)
         assert.ok(rocket)
@@ -30,7 +35,7 @@ describe('speed-increased', () => {
     it('should ignore speed increase for unknown rocket', async () => {
         const rocketId = createRocketId()
 
-        await emit('rocket', 'speed-increased', rocketId, createSpeedIncreasedEvent(200), 'msg-1')
+        await emit('rocket', 'speed-increased', rocketId, createSpeedIncreasedEvent(200, 1))
 
         const rocket = await getRocketState({}, rocketId)
         assert.strictEqual(rocket, undefined)
@@ -39,9 +44,14 @@ describe('speed-increased', () => {
     it('should ignore speed increase for exploded rocket', async () => {
         const rocketId = createRocketId()
 
-        await emit('rocket', 'launched', rocketId, createLaunchedEvent('Falcon-9', 1000), 'msg-1')
-        await emit('rocket', 'exploded', rocketId, { reason: 'PRESSURE_VESSEL_FAILURE' }, 'msg-2')
-        await emit('rocket', 'speed-increased', rocketId, createSpeedIncreasedEvent(200), 'msg-3')
+        await emit('rocket', 'launched', rocketId, createLaunchedEvent('Falcon-9', 1000))
+        await emit(
+            'rocket',
+            'exploded',
+            rocketId,
+            createExplodedEvent('PRESSURE_VESSEL_FAILURE', 1),
+        )
+        await emit('rocket', 'speed-increased', rocketId, createSpeedIncreasedEvent(200, 2))
 
         const rocket = await getRocketState({}, rocketId)
         assert.ok(rocket)

@@ -1,7 +1,12 @@
 import { emit } from '@riddance/service/test/event'
 import { request } from '@riddance/service/test/http'
 import assert from 'node:assert/strict'
-import { createLaunchedEvent, createRocketId } from './lib/events.js'
+import {
+    createExplodedEvent,
+    createLaunchedEvent,
+    createRocketId,
+    createSpeedIncreasedEvent,
+} from './lib/events.js'
 
 describe('reset', () => {
     it('should delete all rockets', async () => {
@@ -13,17 +18,20 @@ describe('reset', () => {
             'launched',
             rocket1Id,
             createLaunchedEvent('Falcon-9', 1000, 'ARTEMIS'),
-            'msg-1',
         )
         await emit(
             'rocket',
             'launched',
             rocket2Id,
             createLaunchedEvent('Falcon-Heavy', 2000, 'MARS'),
-            'msg-2',
         )
-        await emit('rocket', 'speed-increased', rocket1Id, { by: 200 }, 'msg-3')
-        await emit('rocket', 'exploded', rocket2Id, { reason: 'PRESSURE_VESSEL_FAILURE' }, 'msg-4')
+        await emit('rocket', 'speed-increased', rocket1Id, createSpeedIncreasedEvent(200, 1))
+        await emit(
+            'rocket',
+            'exploded',
+            rocket2Id,
+            createExplodedEvent('PRESSURE_VESSEL_FAILURE', 2),
+        )
 
         await request({ method: 'POST', uri: 'reset' })
 

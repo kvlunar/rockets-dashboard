@@ -1,8 +1,8 @@
-import { on, objectSpreadable } from '@riddance/service/event'
+import { on } from '@riddance/service/event'
 import { getRocketState, updateRocketState } from './lib/schema.js'
 
-on('rocket', 'speed-decreased', async (context, subject, event, _timestamp, messageId) => {
-    const { by } = objectSpreadable(event)
+on('rocket', 'speed-decreased', async (context, subject, event) => {
+    const { meta, by } = event as { meta: { sequence: number }; by: number }
 
     const rocket = await getRocketState(context, subject)
 
@@ -10,7 +10,7 @@ on('rocket', 'speed-decreased', async (context, subject, event, _timestamp, mess
         return
     }
 
-    if (rocket.processedMessageIds.includes(messageId)) {
+    if (rocket.processedMessageIds.includes(meta.sequence)) {
         return
     }
 
@@ -18,8 +18,8 @@ on('rocket', 'speed-decreased', async (context, subject, event, _timestamp, mess
         return
     }
 
-    rocket.processedMessageIds.push(messageId)
-    rocket.currentSpeed = Math.max(0, rocket.currentSpeed - (by as number))
+    rocket.processedMessageIds.push(meta.sequence)
+    rocket.currentSpeed = Math.max(0, rocket.currentSpeed - by)
 
     await updateRocketState(context, subject, rocket)
 })

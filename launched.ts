@@ -1,25 +1,30 @@
-import { on, objectSpreadable } from '@riddance/service/event'
+import { on } from '@riddance/service/event'
 import { getRocketState, updateRocketState } from './lib/schema.js'
 
-on('rocket', 'launched', async (context, subject, event, timestamp, messageId) => {
-    const { type, launchSpeed, mission } = objectSpreadable(event)
+on('rocket', 'launched', async (context, subject, event) => {
+    const { meta, type, launchSpeed, mission } = event as {
+        meta: { sequence: number; timestamp: string }
+        type: string
+        launchSpeed: number
+        mission: string
+    }
 
     const existingRocket = await getRocketState(context, subject)
 
-    if (existingRocket?.processedMessageIds.includes(messageId)) {
+    if (existingRocket?.processedMessageIds.includes(meta.sequence)) {
         return
     }
 
     const processedMessageIds = existingRocket?.processedMessageIds ?? []
-    processedMessageIds.push(messageId)
+    processedMessageIds.push(meta.sequence)
 
     const rocketState = {
         id: subject,
-        type: type as string,
-        currentSpeed: launchSpeed as number,
-        mission: mission as string,
+        type,
+        currentSpeed: launchSpeed,
+        mission,
         status: 'active' as const,
-        launchTime: new Date(timestamp),
+        launchTime: new Date(meta.timestamp),
         processedMessageIds,
     }
 

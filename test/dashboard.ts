@@ -1,7 +1,12 @@
 import { emit } from '@riddance/service/test/event'
 import { request } from '@riddance/service/test/http'
 import assert from 'node:assert/strict'
-import { createLaunchedEvent, createRocketId } from './lib/events.js'
+import {
+    createExplodedEvent,
+    createLaunchedEvent,
+    createRocketId,
+    createSpeedIncreasedEvent,
+} from './lib/events.js'
 
 describe('dashboard', () => {
     it('should return empty array when no rockets', async () => {
@@ -20,17 +25,20 @@ describe('dashboard', () => {
             'launched',
             rocket1Id,
             createLaunchedEvent('Falcon-9', 1000, 'ARTEMIS'),
-            'msg-1',
         )
         await emit(
             'rocket',
             'launched',
             rocket2Id,
             createLaunchedEvent('Falcon-Heavy', 2000, 'MARS'),
-            'msg-2',
         )
-        await emit('rocket', 'speed-increased', rocket1Id, { by: 200 }, 'msg-3')
-        await emit('rocket', 'exploded', rocket2Id, { reason: 'PRESSURE_VESSEL_FAILURE' }, 'msg-4')
+        await emit('rocket', 'speed-increased', rocket1Id, createSpeedIncreasedEvent(200, 1))
+        await emit(
+            'rocket',
+            'exploded',
+            rocket2Id,
+            createExplodedEvent('PRESSURE_VESSEL_FAILURE', 1),
+        )
 
         const response = await request({ uri: '' })
 
@@ -60,13 +68,7 @@ describe('dashboard', () => {
     it('should handle rockets with no explosion reason', async () => {
         const rocketId = createRocketId()
 
-        await emit(
-            'rocket',
-            'launched',
-            rocketId,
-            createLaunchedEvent('Falcon-9', 1000, 'ARTEMIS'),
-            'msg-1',
-        )
+        await emit('rocket', 'launched', rocketId, createLaunchedEvent('Falcon-9', 1000, 'ARTEMIS'))
 
         const response = await request({ uri: '' })
 

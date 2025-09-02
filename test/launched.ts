@@ -8,7 +8,7 @@ describe('launched', () => {
         const rocketId = createRocketId()
         const launchEvent = createLaunchedEvent('Falcon-9', 1500, 'ARTEMIS')
 
-        await emit('rocket', 'launched', rocketId, launchEvent, 'msg-1')
+        await emit('rocket', 'launched', rocketId, launchEvent)
 
         const rocket = await getRocketState({}, rocketId)
         assert.ok(rocket)
@@ -23,8 +23,8 @@ describe('launched', () => {
         const rocketId = createRocketId()
         const launchEvent = createLaunchedEvent('Falcon-9', 1500, 'ARTEMIS')
 
-        await emit('rocket', 'launched', rocketId, launchEvent, 'msg-1')
-        await emit('rocket', 'launched', rocketId, launchEvent, 'msg-1')
+        await emit('rocket', 'launched', rocketId, launchEvent)
+        await emit('rocket', 'launched', rocketId, launchEvent)
 
         const rocket = await getRocketState({}, rocketId)
         assert.ok(rocket)
@@ -36,8 +36,8 @@ describe('launched', () => {
         const launchEvent1 = createLaunchedEvent('Falcon-9', 1500, 'ARTEMIS')
         const launchEvent2 = createLaunchedEvent('Falcon-Heavy', 2000, 'MARS')
 
-        await emit('rocket', 'launched', rocketId, launchEvent1, 'msg-1')
-        await emit('rocket', 'launched', rocketId, launchEvent2, 'msg-2')
+        await emit('rocket', 'launched', rocketId, launchEvent1)
+        await emit('rocket', 'launched', rocketId, launchEvent2)
 
         const rocket = await getRocketState({}, rocketId)
         assert.ok(rocket)

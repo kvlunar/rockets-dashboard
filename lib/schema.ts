@@ -8,7 +8,7 @@ export type RocketState = {
     status: 'active' | 'exploded'
     launchTime: Date
     explosionReason?: string
-    processedMessageIds: string[]
+    processedMessageIds: number[]
 }
 
 type Schema = {

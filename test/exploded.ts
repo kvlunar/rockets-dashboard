@@ -7,13 +7,12 @@ describe('exploded', () => {
     it('should set rocket status to exploded', async () => {
         const rocketId = createRocketId()
 
-        await emit('rocket', 'launched', rocketId, createLaunchedEvent('Falcon-9', 1000), 'msg-1')
+        await emit('rocket', 'launched', rocketId, createLaunchedEvent('Falcon-9', 1000))
         await emit(
             'rocket',
             'exploded',
             rocketId,
-            createExplodedEvent('PRESSURE_VESSEL_FAILURE'),
-            'msg-2',
+            createExplodedEvent('PRESSURE_VESSEL_FAILURE', 1),
         )
 
         const rocket = await getRocketState({}, rocketId)
@@ -25,20 +24,18 @@ describe('exploded', () => {
     it('should be idempotent', async () => {
         const rocketId = createRocketId()
 
-        await emit('rocket', 'launched', rocketId, createLaunchedEvent('Falcon-9', 1000), 'msg-1')
+        await emit('rocket', 'launched', rocketId, createLaunchedEvent('Falcon-9', 1000))
         await emit(
             'rocket',
             'exploded',
             rocketId,
-            createExplodedEvent('PRESSURE_VESSEL_FAILURE'),
-            'msg-2',
+            createExplodedEvent('PRESSURE_VESSEL_FAILURE', 1),
         )
         await emit(
             'rocket',
             'exploded',
             rocketId,
-            createExplodedEvent('PRESSURE_VESSEL_FAILURE'),
-            'msg-2',
+            createExplodedEvent('PRESSURE_VESSEL_FAILURE', 2),
         )
 
         const rocket = await getRocketState({}, rocketId)
@@ -53,8 +50,7 @@ describe('exploded', () => {
             'rocket',
             'exploded',
             rocketId,
-            createExplodedEvent('PRESSURE_VESSEL_FAILURE'),
-            'msg-1',
+            createExplodedEvent('PRESSURE_VESSEL_FAILURE', 0),
         )
 
         const rocket = await getRocketState({}, rocketId)
