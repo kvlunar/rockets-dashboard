@@ -13,7 +13,7 @@ describe('launched', () => {
         const rocket = await getRocketState({}, rocketId)
         assert.ok(rocket)
         assert.strictEqual(rocket.id, rocketId)
-        assert.strictEqual(rocket.type, 'Falcon-9')
+        assert.strictEqual(rocket.rocketType, 'Falcon-9')
         assert.strictEqual(rocket.currentSpeed, 1500)
         assert.strictEqual(rocket.mission, 'ARTEMIS')
         assert.strictEqual(rocket.status, 'active')

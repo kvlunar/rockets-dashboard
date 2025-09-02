@@ -2,7 +2,7 @@ import { isConflict, isNotFound, tables } from '@riddance/docs'
 
 export type RocketState = {
     id: string
-    type: string
+    rocketType: string
     currentSpeed: number
     mission: string
     status: 'active' | 'exploded'

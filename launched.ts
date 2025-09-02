@@ -20,7 +20,7 @@ on('rocket', 'launched', async (context, subject, event) => {
 
     const rocketState = {
         id: subject,
-        type,
+        rocketType: type,
         currentSpeed: launchSpeed,
         mission,
         status: 'active' as const,

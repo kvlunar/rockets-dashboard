@@ -7,7 +7,7 @@ get('', async context => {
     return {
         body: rockets.map(rocket => ({
             id: rocket.id,
-            type: rocket.type,
+            type: rocket.rocketType,
             currentSpeed: rocket.currentSpeed,
             mission: rocket.mission,
             status: rocket.status,
