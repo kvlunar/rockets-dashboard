@@ -9,7 +9,7 @@
     "start": "riddance-watch"
   },
   "dependencies": {
-    "@riddance/service": "0.2.4",
+    "@riddance/service": "0.2.5",
     "@riddance/docs": "0.0.1"
   },
   "devDependencies": {

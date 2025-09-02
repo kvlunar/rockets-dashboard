@@ -1,10 +1,17 @@
-import { emit } from '@riddance/service/test/event'
+import {
+    allowErrorLogs,
+    clearEmitted,
+    clearLoggedEntries,
+    emit,
+} from '@riddance/service/test/event'
 import { request } from '@riddance/service/test/http'
 import assert from 'node:assert/strict'
+import { randomUUID } from 'node:crypto'
 import {
     createExplodedEvent,
     createLaunchedEvent,
     createRocketId,
+    createSpeedDecreasedEvent,
     createSpeedIncreasedEvent,
 } from './lib/events.js'
 
@@ -75,4 +82,130 @@ describe('dashboard', () => {
         assert.strictEqual(response.status, 200)
         assert.strictEqual(response.body[0].explosionReason, undefined)
     })
+
+    it('should handle out-of-order', async () => {
+        const subject = createRocketId()
+        await emitInAnyOrderAndWithDuplicates(
+            async () => {
+                await request({ method: 'POST', uri: 'reset' })
+            },
+            [
+                {
+                    topic: 'rocket',
+                    type: 'launched',
+                    subject,
+                    data: createLaunchedEvent('Falcon-Heavy', 2000, 'MARS'),
+                },
+                {
+                    topic: 'rocket',
+                    type: 'speed-decreased',
+                    subject,
+                    data: createSpeedDecreasedEvent(1500, 1),
+                },
+                {
+                    topic: 'rocket',
+                    type: 'exploded',
+                    subject,
+                    data: createExplodedEvent('PRESSURE_VESSEL_FAILURE', 2),
+                },
+            ],
+            async () => {
+                const response = await request({ uri: '' })
+                const [rocket] = response.body
+                assert.strictEqual(rocket.currentSpeed, 500)
+                assert.strictEqual(rocket.status, 'exploded')
+            },
+        )
+    })
 })
+
+type EventData = {
+    topic: string
+    type: string
+    subject: string
+    data: any
+}
+
+export async function emitInAnyOrderAndWithDuplicates(
+    setup: (() => Promise<void>) | undefined,
+    events: EventData[],
+    expect: (() => Promise<void>) | undefined,
+) {
+    for (const duplicated of withDuplicates(
+        events.map(e => ({ ...e, messageId: randomUUID(), time: new Date() })),
+    )) {
+        for (const anyOrder of inAnyOrder(duplicated)) {
+            const emitted = []
+            const failed = []
+            const failedAgain = []
+            const failedAgainAndAgain = []
+            clearLoggedEntries()
+            clearEmitted()
+            if (setup) {
+                await setup()
+            }
+            using _ = allowErrorLogs()
+            try {
+                for (const e of anyOrder) {
+                    emitted.push(e)
+                    if (!(await emit(e.topic, e.type, e.subject, e.data, e.messageId))) {
+                        failed.push(e)
+                    }
+                }
+                for (const e of failed) {
+                    emitted.push(e)
+                    if (!(await emit(e.topic, e.type, e.subject, e.data, e.messageId))) {
+                        failedAgain.push(e)
+                    }
+                }
+                for (const e of failedAgain) {
+                    emitted.push(e)
+                    if (!(await emit(e.topic, e.type, e.subject, e.data, e.messageId))) {
+                        failedAgainAndAgain.push(e)
+                    }
+                }
+                for (const e of failedAgainAndAgain) {
+                    emitted.push(e)
+                    await emit(e.topic, e.type, e.subject, e.data, e.messageId)
+                }
+                if (expect) {
+                    await expect()
+                }
+            } catch (error) {
+                // eslint-disable-next-line no-console
+                console.error(
+                    `Failed event sequence ${emitted.map(e => `${e.topic}.${e.type}`).join(', ')}`,
+                    error,
+                )
+                // eslint-disable-next-line no-console
+                console.error(
+                    `Reproduce test case by doing
+${emitted.map(e => `    await emit('${e.topic}', '${e.type}', '${e.subject}', ${JSON.stringify(e.data)}, '${e.messageId}', new Date(${e.time.getTime()}))`).join('\r\n')}
+    assert...`,
+                    error,
+                )
+                throw error
+            }
+        }
+    }
+}
+
+function withDuplicates<T>(events: T[]) {
+    return [events, ...events.map(e => [...events, e])]
+}
+
+function inAnyOrder<T>(events: T[]): T[][] {
+    if (events.length < 2) {
+        return [events]
+    }
+    const combinations: T[][] = []
+    for (let ix = 0; ix !== events.length; ++ix) {
+        const rest = [...events]
+        const [single] = rest.splice(ix, 1)
+        inAnyOrder(rest).forEach(r => {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            combinations.push([single!, ...r])
+        })
+    }
+    return combinations
+}

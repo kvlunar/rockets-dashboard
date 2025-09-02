@@ -1,4 +1,4 @@
-import { emit } from '@riddance/service/test/event'
+import { allowErrorLogs, emit } from '@riddance/service/test/event'
 import assert from 'node:assert/strict'
 import { getRocketState } from '../lib/schema.js'
 import { createExplodedEvent, createLaunchedEvent, createRocketId } from './lib/events.js'
@@ -46,13 +46,15 @@ describe('exploded', () => {
     it('should ignore explosion for unknown rocket', async () => {
         const rocketId = createRocketId()
 
-        await emit(
+        using _ = allowErrorLogs()
+        const noRetry = await emit(
             'rocket',
             'exploded',
             rocketId,
             createExplodedEvent('PRESSURE_VESSEL_FAILURE', 0),
         )
 
+        assert.ok(!noRetry)
         const rocket = await getRocketState({}, rocketId)
         assert.strictEqual(rocket, undefined)
     })

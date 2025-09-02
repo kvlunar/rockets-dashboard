@@ -7,13 +7,14 @@ on('rocket', 'speed-decreased', async (context, subject, event) => {
     const rocket = await getRocketState(context, subject)
 
     if (!rocket) {
-        return
+        throw new Error('No rocket yet.')
     }
-
     if (rocket.processedMessageIds.includes(meta.sequence)) {
         return
     }
-
+    if (rocket.processedMessageIds.at(-1) !== meta.sequence - 1) {
+        throw new Error('Not ready for event.')
+    }
     if (rocket.status === 'exploded') {
         return
     }

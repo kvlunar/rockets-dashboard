@@ -30,7 +30,7 @@ describe('reset', () => {
             'rocket',
             'exploded',
             rocket2Id,
-            createExplodedEvent('PRESSURE_VESSEL_FAILURE', 2),
+            createExplodedEvent('PRESSURE_VESSEL_FAILURE', 1),
         )
 
         await request({ method: 'POST', uri: 'reset' })

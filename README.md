@@ -4,7 +4,7 @@ This service provides data for a status overview of rocket statuses.
 
 ## Implementation notes
 
-Duplicate events are handled by keeping a list of processed events. Out-of-order events are not yet supported.
+Duplicate events are handled by keeping a list of processed events. Out-of-order events are handled by rejecting out-of-sequence events and relying on event infrastructure retries to eventually deliver the next event.
 
 ## Usage
 
