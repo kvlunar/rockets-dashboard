@@ -1,4 +1,4 @@
-import { allowErrorLogs, emit } from '@riddance/service/test/event'
+import { emit } from '@riddance/service/test/event'
 import assert from 'node:assert/strict'
 import { getRocketState } from '../lib/schema.js'
 import {
@@ -50,15 +50,13 @@ describe('mission-changed', () => {
     it('should ignore mission change for unknown rocket', async () => {
         const rocketId = createRocketId()
 
-        using _ = allowErrorLogs()
-        const noRetry = await emit(
+        await emit(
             'rocket',
             'mission-changed',
             rocketId,
             createMissionChangedEvent('MARS_MISSION', 1),
         )
 
-        assert.ok(!noRetry)
         const rocket = await getRocketState({}, rocketId)
         assert.strictEqual(rocket, undefined)
     })

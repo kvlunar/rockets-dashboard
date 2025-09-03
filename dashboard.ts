@@ -15,6 +15,6 @@ get('', async context => {
                 launchTime: rocket.launchTime,
                 ...(rocket.explosionReason && { explosionReason: rocket.explosionReason }),
             }))
-            .sort((a, b) => new Date(a.launchTime).getTime() - new Date(b.launchTime).getTime()),
+            .sort((a, b) => a.launchTime.getTime() - b.launchTime.getTime()),
     }
 })

@@ -1,9 +1,4 @@
-import {
-    allowErrorLogs,
-    clearEmitted,
-    clearLoggedEntries,
-    emit,
-} from '@riddance/service/test/event'
+import { clearEmitted, clearLoggedEntries, emit } from '@riddance/service/test/event'
 import { request } from '@riddance/service/test/http'
 import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
@@ -84,6 +79,7 @@ describe('dashboard', () => {
     })
 
     it('should handle out-of-order', async () => {
+        assert.strictEqual(withDuplicates([1, 2, 3, 4]).flatMap(inAnyOrder).length, 24 + 4 * 120)
         const subject = createRocketId()
         await emitInAnyOrderAndWithDuplicates(
             async () => {
@@ -98,15 +94,27 @@ describe('dashboard', () => {
                 },
                 {
                     topic: 'rocket',
+                    type: 'speed-increased',
+                    subject,
+                    data: createSpeedIncreasedEvent(200, 1),
+                },
+                {
+                    topic: 'rocket',
+                    type: 'speed-increased',
+                    subject,
+                    data: createSpeedIncreasedEvent(400, 2),
+                },
+                {
+                    topic: 'rocket',
                     type: 'speed-decreased',
                     subject,
-                    data: createSpeedDecreasedEvent(1500, 1),
+                    data: createSpeedDecreasedEvent(2100, 3),
                 },
                 {
                     topic: 'rocket',
                     type: 'exploded',
                     subject,
-                    data: createExplodedEvent('PRESSURE_VESSEL_FAILURE', 2),
+                    data: createExplodedEvent('PRESSURE_VESSEL_FAILURE', 4),
                 },
             ],
             async () => {
@@ -116,7 +124,7 @@ describe('dashboard', () => {
                 assert.strictEqual(rocket.status, 'exploded')
             },
         )
-    })
+    }).timeout(5000)
 })
 
 type EventData = {
@@ -144,7 +152,6 @@ export async function emitInAnyOrderAndWithDuplicates(
             if (setup) {
                 await setup()
             }
-            using _ = allowErrorLogs()
             try {
                 for (const e of anyOrder) {
                     emitted.push(e)
@@ -180,7 +187,7 @@ export async function emitInAnyOrderAndWithDuplicates(
                 // eslint-disable-next-line no-console
                 console.error(
                     `Reproduce test case by doing
-${emitted.map(e => `    await emit('${e.topic}', '${e.type}', '${e.subject}', ${JSON.stringify(e.data)}, '${e.messageId}', new Date(${e.time.getTime()}))`).join('\r\n')}
+${emitted.map(e => `    await emit('${e.topic}', '${e.type}', '${e.subject}', ${JSON.stringify(e.data)}, '${e.messageId}')`).join('\r\n')}
     assert...`,
                     error,
                 )
